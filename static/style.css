@@ -1,0 +1,39 @@
+body {
+    font-family: sans-serif;
+    text-align: center;
+    background-color: #fff9e5; /* Light beige for a potato-y feel */
+}
+
+#potato-container {
+    margin: 40px auto;
+    width: 300px;
+    height: 300px;
+    border: 2px solid #d5be85; /* Potato brown border */
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+	overflow: hidden;
+}
+
+#potato-img {
+    width: 100%;
+    height: 100%;
+	object-fit: contain;
+}
+
+#actions-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-around;
+}
+
+button {
+    background-color: #e2d5b2; /* Lighter potato brown */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
