@@ -1,0 +1,38 @@
+.rain {
+    height: 100%;
+    overflow: hidden;
+
+    --s: 2px 4px; /* size of drop of water*/
+    --c: hsl(202, 89%, 64%, 45%); /* color of the water*/
+    --a: -7deg; /* control the skewing*/
+    --w: 53px; /* width of the pattern*/
+    --h: 55px; /* height of the pattern*/
+
+    --rad: radial-gradient(var(--s), var(--c) 100%, transparent 100%);
+}
+.rain:before,
+.rain:after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    bottom: 0;
+    right: -20%;
+    left: -20%;
+    height: calc(
+        100% + var(--h) + 10px
+    ); /* should be bigger than (100% + var(--h))*/
+    background: var(--rad) -12px 3px, var(--rad) 17px 0, var(--rad) 6px 12px,
+        var(--rad) 24px 23px, var(--rad) 39px 30px, var(--rad) 5px 43px;
+    background-size: var(--w) var(--h);
+    animation: rain 0.2s linear infinite;
+    transform: skew(var(--a));
+}
+.rain:after {
+    --h: 70px;
+    --w: 61px;
+}
+@keyframes rain {
+    to {
+        transform: skew(var(--a)) translateY(var(--h)); /* Same as the height of the background-size */
+    }
+}
