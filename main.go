@@ -1,65 +1,73 @@
 package main
 
 import (
-	"io"
+	"fmt"
 	"log"
 	"net/http"
+	"sync"
 )
 
-func getHello(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello, HTTP!\n")
+var (
+	mu          sync.Mutex
+	credentials = map[string]string{
+		"username1": "password1",
+		"username2": "password2",
+	}
+)
+
+func auth(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		// http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.ServeFile(w, r, "./static/auth.html")
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		return
+	}
+
+	// Access form data
+	action := r.Form.Get("action")
+	username := r.Form.Get("username")
+	password := r.Form.Get("password")
+	// fmt.Printf("A: %s\nU: %s\nP: %s\n", action, username, password)
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if action == "register" {
+		// Check if the username already exists
+		if _, exists := credentials[username]; exists {
+			http.Error(w, "Username already exists", http.StatusBadRequest)
+			return
+		}
+
+		// Register the new user
+		credentials[username] = password
+
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	} else {
+		// Check credentials
+		storedPassword, ok := credentials[username]
+		if !ok || storedPassword != password {
+			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+			return
+		}
+
+		http.Redirect(w, r, "/", http.StatusMovedPermanently)
+	}
 }
 
 func main() {
-	http.HandleFunc("/", play)
-	http.HandleFunc("/hello", getHello)
-	http.HandleFunc("/register", register)
-	http.HandleFunc("/login", login)
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fs)
 
+	http.HandleFunc("/auth", auth)
+
+	fmt.Println("Server running on port 3000...")
 	err := http.ListenAndServe(":3000", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-var users = map[string]string{
-	"test": "notsecret",
-}
-
-func isAuthorised(username, password string) bool {
-	pass, ok := users[username]
-	if !ok {
-		return false
-	}
-
-	return password == pass
-}
-
-func play(w http.ResponseWriter, r *http.Request) {
-	username, password, ok := r.BasicAuth()
-	if !ok {
-		w.Header().Add("WWW-Authenticate", `Basic realm="Give username and password"`)
-		w.WriteHeader(http.StatusUnauthorized)
-		http.RedirectHandler("/register", 401)
-		return
-	}
-
-	if !isAuthorised(username, password) {
-		w.Header().Add("WWW-Authenticate", `Basic realm="Give username and password"`)
-		w.WriteHeader(http.StatusUnauthorized)
-		http.RedirectHandler("/login", 401)
-		return
-	}
-
-	http.FileServer(http.Dir("./static/")).ServeHTTP(w, r)
-}
-
-func auth() {
-}
-
-func login(w http.ResponseWriter, r *http.Request) {
-}
-
-func register(w http.ResponseWriter, r *http.Request) {
-
 }
